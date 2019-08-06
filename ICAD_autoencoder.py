@@ -13,9 +13,9 @@ data_directory = "./2/csv/"
 folders = os.listdir(data_directory)
 for folder in folders:
     for filename in os.listdir(os.path.join(data_directory, folder)):
-        data = pd.read_csv(os.path.join(data_directory, folder, filename), usecols=[0,1,2,3,4,5,6,7,8,9])
-        data_numpy = np.array(data)
-        data_list = np.concatenate((data_list, data_numpy))
+	data = pd.read_csv(os.path.join(data_directory, folder, filename), usecols=[0,1,2,3,4,5,6,7,8,9])
+	data_numpy = np.array(data)
+	data_list = np.concatenate((data_list, data_numpy))
 
 X = data_list[:,:8]
 y = data_list[:,-2:]
@@ -54,13 +54,23 @@ test_data_path = "./2/2.csv"
 test_data = pd.read_csv(test_data_path, usecols=[0,1,2,3,4,5,6,7])
 test_data = np.array(test_data)/[100.0, 100.0, 120.0, 10.0, 120.0, 120.0, 60.0, 60.0]
 
+p_list = []
 for i in range(len(test_data)):
     test_point = test_data[i].reshape(1, -1)
     test_point_encoded = encoder.predict(test_point)
     test_point_reconstruction = autoencoder.predict(test_point)
     reconstruction_error_test = np.square(test_point-test_point_reconstruction).mean(axis=1)
-    print(test_point_reconstruction.shape, reconstruction_error_test.shape)
-    
+    distances, indices = nbrs.kneighbors(test_point_encoded)
+    test_nbrs_reconstruction_error = reconstruction_error_train[indices]
+    test_NC = np.sum(test_nbrs_reconstruction_error, axis=1)
+    count = 0
+    for j in range(len(calibration_NC)):
+        if test_NC[0] < calibration_NC[j]:
+            count += 1
 
+    p = count / float(len(calibration_NC))
+    p_list.append(p)
+
+plt.plot(p_list)
 
 #%%

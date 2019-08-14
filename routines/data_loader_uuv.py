@@ -91,3 +91,24 @@ class dataLoader():
         Y = data_list[:,-2]
 
         return X, Y
+
+        
+def testDataLoader(path, isObstacle):
+    normalizer = [100.0, 100.0, 120.0, 10.0, 120.0, 120.0, 60.0, 60.0, 1.0, 1.0]
+    data_list = np.empty([0, 8])
+    data = pd.read_csv(path, usecols=[0,1,2,3,4,5,6,7,8,9])
+    data = np.array(data)/normalizer
+    if isObstacle:
+        pre_point = np.zeros([8,])
+        for i in range(len(data)):
+            current_point = data[i][0:8]
+            if (current_point[6]<0.0 or current_point[7]<0.0 or current_point[7]-pre_point[7]>=0):
+                data_list = np.concatenate((data_list, np.array([None]*8).reshape(1,8)))
+            else:
+                data_list = np.concatenate((data_list,current_point.reshape(1,8)))    
+            pre_point = np.copy(current_point)
+    
+    else:
+        data_list = np.copy(data[:,0:8])
+    
+    return data_list

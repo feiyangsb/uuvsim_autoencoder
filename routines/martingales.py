@@ -44,7 +44,6 @@ class PIM(object):
         normalizer = kernel.integrate_box_1d(0.0, 1.0)
         betting = kernel(p)[0] / normalizer
         self.M *= betting
-        print(self.M, betting)
         self.extended_p_list.append(p)
         self.extended_p_list.append(-p)
         self.extended_p_list.append(2.0-p)

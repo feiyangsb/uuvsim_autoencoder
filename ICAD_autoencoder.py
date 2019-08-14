@@ -53,6 +53,7 @@ print(calibration_NC_normolized.shape)
 plt.plot(calibration_NC_normolized)
 
 #%%
+global p_list
 p_list = []
 def integrand(x):
     result = 1.0
@@ -62,19 +63,25 @@ def integrand(x):
 
 #%%
 import math
-test_data_path = "./2/10.csv"
+from scipy import stats
+
+test_data_path = "./2/1.csv"
 test_data = pd.read_csv(test_data_path, usecols=[0,1,2,3,4,5,6,7])
 test_data = np.array(test_data)/[100.0, 100.0, 120.0, 10.0, 120.0, 120.0, 60.0, 60.0]
 
 NCM_list = []
-global p_list
+
 p_smooth_list = []
 p_neg_log_list = []
 M_list = []
 M_sw_list = []
 SMM_list = []
+PIM_list = []
 M = 1.0
+PIM = 1.0
+
 epsilon = 0.75
+extended_p_list = [1.0,-1.0,1.0]
 for i in range(len(test_data)):
     test_point = test_data[i].reshape(1, -1)
     test_point_encoded = encoder.predict(test_point)
@@ -96,6 +103,18 @@ for i in range(len(test_data)):
 
     tau = np.random.uniform(0,1.0)
     p = (count) / float(len(calibration_NC_normolized))
+    array = np.array(extended_p_list).reshape(1,-1)
+    print(array.shape)
+    kernel = stats.gaussian_kde(array, bw_method='silverman')
+    normalizer = kernel.integrate_box_1d(0.0,1.0)
+    pho = kernel(p)/normalizer
+    PIM *= pho 
+    print(pho, PIM[0])
+    PIM_list.append(PIM[0])
+
+    extended_p_list.append(p)
+    extended_p_list.append(2.0-p)
+    extended_p_list.append(-p)
     if (p == 0.0):
         p = 0.05
     M = M * epsilon * (p ** (epsilon - 1))
@@ -113,26 +132,21 @@ for i in range(len(test_data)):
     p_smooth = (count+tau*count_same) / float(len(calibration_NC_normolized))
     p_smooth_list.append(p_smooth)
     p_neg_log_list.append(p_neg_log)
-
+"""
 plt.figure(1)
 plt.plot(NCM_list)
+"""
 
-plt.figure(2)
-plt.plot(p_list)
+plt.figure(1)
+f, (ax1, ax2) = plt.subplots(2,1)
+plt.suptitle("Autoencoder ICAD (tracking)")
+ax1.plot(p_list)
+ax1.set_xlabel("Time(S)")
+ax1.set_ylabel("p")
+ax2.plot(PIM_list)
+ax2.set_xlabel("Time(S)")
+ax2.set_ylabel("PIM")
+plt.show()
 
-plt.figure(3)
-plt.plot(p_neg_log_list)
-
-plt.figure(4)
-plt.plot(p_smooth_list)
-
-plt.figure(5)
-plt.plot(M_sw_list)
-
-plt.figure(6)
-plt.plot(M_list)
-
-plt.figure(7)
-plt.plot(SMM_list)
 #%%
 

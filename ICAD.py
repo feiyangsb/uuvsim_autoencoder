@@ -33,11 +33,23 @@ plt.plot(calibration_NC)
 #plt.show()
 
 #%%
-test_data_path = "./2/0.csv"
+from routines.martingales import RPM, SMM, PIM
+
+test_data_path = "./2/csv/ds1_p_p/7.csv"
 test_data = pd.read_csv(test_data_path, usecols=[0,1,2,3,4,5,6,7])
 test_data = np.array(test_data)/[100.0, 100.0, 120.0, 10.0, 120.0, 120.0, 60.0, 60.0]
 NCM_list = []
 p_list = []
+
+rpm = RPM(0.75)
+RPM_list = []
+
+smm = SMM()
+SMM_list = []
+
+pim = PIM()
+PIM_list = []
+
 for i in range(len(test_data)):
     test_point = test_data[i].reshape(1, -1)
     distances, indices = nbrs.kneighbors(test_point)
@@ -52,7 +64,22 @@ for i in range(len(test_data)):
             count += 1
     p = (count) / float(len(calibration_NC))
     p_list.append(p)
+    
+    if (i < 20):
+        RPM_list.append(0.0)
+        SMM_list.append(0.0)
+        PIM_list.append(0.0)
+    else:
+        RPM_list.append(rpm(p))
+        SMM_list.append(smm(p))
+        PIM_list.append(pim(p))
 
 plt.figure(2)
 plt.plot(p_list)
+plt.figure(3)
+plt.plot(RPM_list)
+plt.figure(4)
+plt.plot(SMM_list)
+plt.figure(5)
+plt.plot(PIM_list)
 plt.show()

@@ -26,7 +26,7 @@ for folder in folders:
 
 #%%
 import matplotlib.pyplot as plt
-plt.plot(obstacle_list[12][:,6])
+#plt.plot(obstacle_list[12][:,6])
 
 #%%
 from sklearn.model_selection import train_test_split
@@ -78,6 +78,13 @@ for i in range(len(test_data)):
         p_list.append(p)
     else:
         p_list.append(None)
+
+plt.figure(1)
+plt.title("ICAD for time trajectories (Obstacle)")
+plt.xlabel("Time(S)")
+plt.ylabel("p")
 plt.plot(p_list)
 
-#%%
+plt.show()
+
+

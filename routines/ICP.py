@@ -21,24 +21,27 @@ class ICP(object):
         plt.title("NC for calibration dataset without normalizer(Speed)")
         """
         sum_distances = np.repeat(np.sum(distances, axis=1).reshape(-1,1), 2, axis=1)
-        self.rho = np.array([1.0,1.0])#np.array([[1.0],[1.0]]).repeat(len(X_calibration), axis=1)
+        self.rho = np.array([20.0,20.0])#np.array([[1.0],[1.0]]).repeat(len(X_calibration), axis=1)
         self.ksi = np.array([5.0,5.0])#np.array([[1.0],[1.0]]).repeat(len(X_calibration), axis=1)
+        #self.rho = np.array([1.0,1.0])#np.array([[1.0],[1.0]]).repeat(len(X_calibration), axis=1)
+        #self.ksi = np.array([5.0,5.0])#np.array([[1.0],[1.0]]).repeat(len(X_calibration), axis=1)
         #normalizer = sum_distances*self.rho + std_distances*self.ksi
         #normalizer = np.exp(sum_distances*self.rho) + np.exp(std_output*self.ksi)
         #normalizer = np.exp(sum_distances/sum_distances_median*self.rho) + np.exp(std_output/std_output_median*self.ksi)
         #normalizer = sum_distances/float(n_neighbors)*self.rho + std_output*self.ksi
         #normalizer = np.abs(self.rho + sum_distances + std_output)
+        print(sum_distances)
+        print("---------")
+        print(std_output)
         normalizer = np.exp(sum_distances/float(self.n_neighbors)*self.rho) + np.exp(std_output*self.ksi)
         calibration_NC_normalized = calibration_NC / normalizer
         self.calibration_nonconformities = np.sort(calibration_NC_normalized, axis=0)
-        """
-        g1 = plt.figure(5)
+        g1 = plt.figure(1)
         plt.plot(self.calibration_nonconformities[:,0])
         plt.title("NC for calibration dataset(Heading Change)")
-        g2 = plt.figure(6)
+        g2 = plt.figure(2)
         plt.plot(self.calibration_nonconformities[:,1])
         plt.title("NC for calibration dataset(Speed)")
-        """
     
     def evaluate(self, data_test):
         X_test = data_test[0:8].reshape(1, -1)

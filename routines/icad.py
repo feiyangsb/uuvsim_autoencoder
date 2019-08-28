@@ -12,6 +12,7 @@ class ICAD():
         self.isTrajectory =isTrajectory
         self.isObstacle = isObstacle
         self.ncm = ncm
+        self.sliding_window_length = 10
         
         if self.isTrajectory:
             self.traj = np.empty([0, 8])
@@ -34,7 +35,7 @@ class ICAD():
                 self.calibration_NC = calibration_nbrs_distances_sum
                 self.calibration_NC.sort()
             # SVDD
-            if self.ncm == 4:
+            elif self.ncm == 4:
                 try:
                     print("Load the pretrained svdd model")
                     if self.isObstacle:
@@ -108,18 +109,33 @@ class ICAD():
             self.traj = np.empty([0,8])
             return None
         else:
-            self.traj = np.concatenate((self.traj, data_point))
-            v_row = []
-            for i in range(len(self.trainingData)):
-                v_row.append(directed_hausdorff(self.traj, self.trainingData[i])[0])
-            v_row.sort()
-            test_NC = sum(v_row[0:self.k])
-            p = sum(ele > test_NC for ele in self.calibration_NC) / float(len(self.calibration_NC))
-            return p
-        
+            if self.isObstacle:
+                self.traj = np.concatenate((self.traj, data_point))
+                v_row = []
+                for i in range(len(self.trainingData)):
+                    v_row.append(directed_hausdorff(self.traj, self.trainingData[i])[0])
+                v_row.sort()
+                test_NC = sum(v_row[0:self.k])
+                p = sum(ele > test_NC for ele in self.calibration_NC) / float(len(self.calibration_NC))
+                return p
+            else:
+                if len(self.traj)<self.sliding_window_length:
+                    self.traj = np.concatenate((self.traj, data_point))
+                else:
+                    self.traj[:-1] = self.traj[1:]
+                    self.traj[-1] = data_point
 
-    
+                v_row = []
+                for i in range(len(self.trainingData)):
+                    v_row.append(directed_hausdorff(self.traj, self.trainingData[i])[0])
+                v_row.sort()
+                test_NC = sum(v_row[0:self.k])
+                p = sum(ele > test_NC for ele in self.calibration_NC) / float(len(self.calibration_NC))
+                return p
+
+
     def __call__(self, data_point):
+        data_point = data_point[:8]
         if self.isTrajectory:
             p = self.__traj_evaluate(data_point)
         else:

@@ -3,6 +3,7 @@ from sklearn.neighbors import NearestNeighbors
 import numpy as np
 from keras.models import model_from_json
 from routines.deep_svdd import deepSVDD
+from routines.vae import VAE
 from scipy import stats
 
 class ICAD():
@@ -34,6 +35,37 @@ class ICAD():
                 calibration_nbrs_distances_sum = np.sum(dists, axis=1)
                 self.calibration_NC = calibration_nbrs_distances_sum
                 self.calibration_NC.sort()
+            
+            # VAE
+            elif self.ncm == 2:
+                try:
+                    print("Load the pretrained VAE model")
+                    if self.isObstacle:
+                        with open('./nnmodel/uuvsim/vae_architecture_obstacle.json','r') as f:
+                            self.vae_model = model_from_json(f.read())
+                        self.vae_model.load_weights('./nnmodel/uuvsim/vae_weights_obstacle.h5')
+                    else:
+                        with open('./nnmodel/uuvsim/vae_architecture.json','r') as f:
+                            self.vae_model = model_from_json(f.read())
+                        self.vae_model.load_weights('./nnmodel/uuvsim/vae_weights.h5')
+                        
+                except:
+                    print("Cannot find the pretrained model, training it from start")
+                    vae = VAE(self.trainingData)
+                    self.vae_model = vae.fit()
+                    # save the model and center
+                    if self.isObstacle:
+                        self.vae_model.save_weights('./nnmodel/uuvsim/vae_weights_obstacle.h5')
+                        with open('./nnmodel/uuvsim/vae_architecture_obstacle.json', 'w') as f:
+                            f.write(self.vae_model.to_json())
+                    else:
+                        self.vae_model.save_weights('./nnmodel/uuvsim/vae_weights.h5')
+                        with open('./nnmodel/uuvsim/vae_architecture.json', 'w') as f:
+                            f.write(self.vae_model.to_json())
+                reconstructed_inputs = self.vae_model.predict(self.calibrationData)
+                self.calibration_NC = np.square(reconstructed_inputs - self.calibrationData).mean(axis=1)
+                self.calibration_NC.sort()
+
             # SVDD
             elif self.ncm == 4:
                 try:
@@ -93,6 +125,15 @@ class ICAD():
                         count += 1
                 p = count / float(len(self.calibration_NC))
                 return p
+        if self.ncm == 2:
+            if data_point[0][0] == None:
+                return None
+            else:
+                reconstructed_input = self.vae_model.predict(data_point)
+                reconstruction_error = np.square(reconstructed_input - data_point).mean(axis=1)
+                p = (100 - stats.percentileofscore(self.calibration_NC, reconstruction_error))/float(100)
+                return p
+
         if self.ncm == 4:
             if data_point[0][0] == None:
                 return None

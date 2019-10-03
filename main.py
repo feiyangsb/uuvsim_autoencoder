@@ -33,11 +33,11 @@ if __name__ == "__main__":
     if not args.trajectory:
         RPM_list = []
         SMM_list = []
-        PIM_list = []
+        #PIM_list = []
         epsilon = 0.75
-        rpm = RPM(epsilon)
-        smm = SMM()
-        pim = PIM()
+        rpm = RPM(epsilon, 5)
+        smm = SMM(5)
+        #pim = PIM()
 
     for i in range(len(data)):
         p = icad(data[i])
@@ -46,16 +46,16 @@ if __name__ == "__main__":
             if data[i][0] == None:
                 rpm = RPM(0.75)
                 smm = SMM()
-                pim = PIM()
+                #pim = PIM()
                 RPM_list.append(None)
                 SMM_list.append(None)
-                PIM_list.append(None)
+                #PIM_list.append(None)
             else:
                 RPM_list.append(rpm(p))
                 SMM_list.append(smm(p))
-                PIM_list.append(pim(p))
+                #PIM_list.append(pim(p))
     if not args.trajectory:        
-        f, (ax1, ax2, ax3, ax4) = plt.subplots(4,1)
+        f, (ax1, ax2, ax3) = plt.subplots(3,1)
         plt.suptitle("Deep SVDD ICAD (Obstacle Avoidance)")
         ax1.plot(p_list)
         ax1.set_ylabel("p")
@@ -63,9 +63,8 @@ if __name__ == "__main__":
         ax2.set_ylabel("RPM")
         ax3.plot(SMM_list)
         ax3.set_ylabel("SMM")
-        ax4.plot(PIM_list)
-        ax4.set_xlabel("Time(S)")
-        ax4.set_ylabel("PIM")
+        ax3.set_xlabel("Time(S)")
+        plt.savefig("1.png")
         plt.show()
     else:
         plt.plot(p_list, 'g')
